@@ -1,43 +1,46 @@
 package db;
-import java.util.ArrayList;
 import db.exception.EntityNotFoundException;
+import db.exception.InvalidEntityException;
+import java.util.HashMap;
+import java.util.ArrayList;
+
 public class Database {
     private static final ArrayList<Entity> entities = new ArrayList<>();
     private static int idCounter = 1;
+    private static HashMap<Integer, Validator> validators = new HashMap<>();
 
     private Database() {}
 
-    public static void add(Entity e) {
+    public static void registerValidator(int entityCode, Validator validator) {
+        if(validators.containsKey(entityCode)){
+            throw new IllegalArgumentException("Validator exists for this entity code");
+        }
+        validators.put(entityCode, validator);
+    }
+
+    public static void add(Entity e) throws InvalidEntityException {
+        Validator validator = validators.get(e.getEntityCode());
+        if(validator != null){
+            validator.validate(e);
+        }
         e.id = idCounter++;
-        entities.add(e.copy());
+        entities.add(e);
     }
 
     public static Entity get(int id) {
         for(Entity e : entities){
             if(e.id == id){
-                return e.copy();
+                return e;
             }
         }
         throw new EntityNotFoundException(id);
     }
 
-    public static void delete(int id) {
-        for(int i = 0; i < entities.size(); i++){
-            if(entities.get(i).id == id){
-                entities.remove(i);
-                return;
-            }
+    public static void update(Entity e) throws InvalidEntityException {
+        Validator validator = validators.get(e.getEntityCode());
+        if(validator != null){
+            validator.validate(e);
         }
-        throw new EntityNotFoundException(id);
-    }
 
-    public static void update(Entity e) {
-        for(int i = 0; i < entities.size(); i++){
-            if(entities.get(i).id == e.id){
-                entities.set(i, e.copy());
-                return;
-            }
-        }
-        throw new EntityNotFoundException(e.id);
     }
 }
