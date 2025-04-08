@@ -6,5 +6,5 @@ public abstract class Entity {
     public int id;
     public abstract int getEntityCode();
 
-    public abstract Human copy();
+    public abstract Entity copy();
 }
